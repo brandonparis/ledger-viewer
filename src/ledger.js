@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, Text } from '@aragon/ui';
+import { Card, Text, IconPlus, IconRemove } from '@aragon/ui';
 import styled from 'styled-components';
 
 import { useWeb3 } from './Web3Context';
@@ -8,18 +8,30 @@ const BlockContainer = styled(Card).attrs((attrs) => ({
   ...attrs,
   value: attrs.value,
 }))`
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 80% auto;
   margin: 1rem auto;
   height: auto;
-  width: 50vw;
+  width: 60vw;
   padding: 1rem;
   cursor: pointer;
+  justify-content: space-between;
   &:hover {
     background-color: hsl(250, 90%, 90%);
     cursor: pointer;
   }
-`
+`;
+
+const TransactionContainer = styled(BlockContainer)`
+  width: 50vw;
+  margin-top: -1rem
+`;
+
+const CardHeader = styled.h3`
+  font-weight: bold;
+  display: inline;
+  margin-right: 1rem;
+`;
 
 const Ledger = props => {
   const [blocks, setBlocks] = useState([]);
@@ -42,9 +54,18 @@ const Ledger = props => {
   }, []);
 
   const getTransactions = async (hash) => {
+    console.log(hash);
+    if (open.hash) {
+      return setOpen({
+        ...open,
+        [hash]: false,
+      })
+    }
     setOpen({
-      hash: !open.hash,
+      ...open,  
+      [hash]: !open[hash],
     });
+    console.log(open);
     const block = await web3.eth.getBlock(hash, true);
     setTransactions(
       block.transactions.filter((trans) => trans.value > 0).slice(0, 10)
@@ -60,20 +81,32 @@ const Ledger = props => {
             <>
             <BlockContainer onClick={() => getTransactions(block.hash)} value={block.hash} key={block.hash}>
               <div>
-              <Text color='black'>{block.number}</Text>
+                <CardHeader>Block number</CardHeader>
+                <Text color='black'>{block.number}</Text>
               </div>
+              {
+                open[block.hash] ?
+                  <IconRemove/> :
+                  <IconPlus />
+              }
               <div>
-              <Text color='black'>{block.hash}</Text>
+                <CardHeader>Hash</CardHeader>
+                <Text color='black'>{block.hash}</Text>
               </div>
             </BlockContainer>
-            <div hidden={!open.hash}>
+            <div hidden={!open[block.hash]}>
               {
                 transactions.map(trans => (
-                  <BlockContainer value={trans.hash} key={trans.hash}>
-                    <div>
-                    <Text color='black'>{block.number}</Text>
-                    </div>
-                  </BlockContainer>
+                  <TransactionContainer value={trans.hash} key={trans.hash}>
+                      <div>
+                        <CardHeader>Transaction hash</CardHeader>
+                        <Text color='black'>{trans.hash}</Text>
+                      </div>
+                      <div>
+                        <CardHeader>Ether sent</CardHeader>
+                        <Text color='black'>{trans.value}</Text>
+                      </div>
+                  </TransactionContainer>
                 ))
               }
             </div>
