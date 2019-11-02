@@ -19,18 +19,11 @@ const Transactions = () => {
     console.log(await web3.eth.getTransactionFromBlock('latest', 2));
   };
   return (
-    <Main>
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>
-            Edit <code>src/App.js</code> and save to reload.
-          </p>
-          <Button>Hello world</Button>
-          Learn React
-        </header>
-      </div>
-    </Main>
+    <div>
+      <span>
+        {}
+      </span>
+    </div>
   );
 };
 
