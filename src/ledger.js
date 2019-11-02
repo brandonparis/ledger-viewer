@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Text, IconPlus, IconRemove } from '@aragon/ui';
 import { FaChevronRight, FaChevronDown } from 'react-icons/fa';
+import { numToReadableString } from './utils/utils';
 import styled from 'styled-components';
 
 import { useWeb3 } from './Web3Context';
@@ -109,7 +110,7 @@ const Ledger = props => {
                       <div></div>
                       <div>
                         <CardHeader>Ether sent</CardHeader>
-                        <Text color='black'>{trans.value}</Text>
+                        <Text color='black'>{`${numToReadableString(web3.utils.fromWei(trans.value, 'milliether'))} (Milli)ether`}</Text>
                       </div>
                   </BlockContainer>
                 ))}
