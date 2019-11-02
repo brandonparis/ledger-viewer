@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { Card, Text, IconPlus, IconRemove } from '@aragon/ui';
+import { FaChevronRight, FaChevronDown } from 'react-icons/fa';
 import styled from 'styled-components';
 
 import { useWeb3 } from './Web3Context';
 
-const BlockContainer = styled(Card).attrs((attrs) => ({
+const BlockContainer = styled(Card).attrs(attrs => ({
   ...attrs,
   value: attrs.value,
 }))`
   display: grid;
   grid-template-columns: 80% auto;
+  grid-template-rows: repeat(3, 1fr);
   margin: 1rem auto;
   height: auto;
   width: 60vw;
@@ -37,6 +39,7 @@ const Ledger = props => {
   const [blocks, setBlocks] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [open, setOpen] = useState({});
+  const [expandHash, setHashExpanded] = useState({});
   const web3 = useWeb3();
   const getBlocks = async () => {
     let tempArr = [];
@@ -53,63 +56,64 @@ const Ledger = props => {
     })();
   }, []);
 
-  const getTransactions = async (hash) => {
-    console.log(hash);
-    if (open.hash) {
+  const getTransactions = async (e, block) => {
+    console.log(e.target.id);
+    if (e.target.id === 'hashVal') return;
+    console.log(open[block]);
+    if (open[block]) {
       return setOpen({
-        ...open,
-        [hash]: false,
+        ...open,  
+        [block]: false,
       })
     }
     setOpen({
       ...open,  
-      [hash]: !open[hash],
+      [block]: true,
     });
-    console.log(open);
-    const block = await web3.eth.getBlock(hash, true);
+    const blockDetails = await web3.eth.getBlock(block, true);
     setTransactions(
-      block.transactions.filter((trans) => trans.value > 0).slice(0, 10)
+      blockDetails.transactions.filter((trans) => trans.value > 0).slice(0, 10)
     );
   }
-
-  console.log(transactions);
 
   return (
     <div>
         <div>
           {blocks.map(block => (
             <>
-            <BlockContainer onClick={() => getTransactions(block.hash)} value={block.hash} key={block.hash}>
+            <BlockContainer title='Get transaction details' onClick={(e) => getTransactions(e, block.hash)} value={block.hash} key={block.hash}>
               <div>
                 <CardHeader>Block number</CardHeader>
                 <Text color='black'>{block.number}</Text>
               </div>
               {
                 open[block.hash] ?
-                  <IconRemove/> :
-                  <IconPlus />
+                  <FaChevronDown title='Close transaction details' /> :
+                  <FaChevronRight title='Get transaction details' />
               }
               <div>
                 <CardHeader>Hash</CardHeader>
-                <Text color='black'>{block.hash}</Text>
+                <Text title='Click to see full hash' id='hashVal' color='black' onClick={() => setHashExpanded({[block.hash]: !expandHash[block.hash]})}>
+                  {expandHash[block.hash] ? block.hash : `${block.hash.substring(0, 8)}...`}
+                </Text>
               </div>
+              <span style={{gridArea: '3/1/3/2'}}>Click to see transactions...</span>
             </BlockContainer>
             <div hidden={!open[block.hash]}>
-              {
-                transactions.map(trans => (
-                  <TransactionContainer value={trans.hash} key={trans.hash}>
+              {transactions.map(trans => (
+                  <BlockContainer value={trans.hash} key={trans.hash}>
                       <div>
                         <CardHeader>Transaction hash</CardHeader>
-                        <Text color='black'>{trans.hash}</Text>
+                        <Text color='black'>{`${trans.hash.substring(0, 8)}...` }</Text>
                       </div>
+                      <div></div>
                       <div>
                         <CardHeader>Ether sent</CardHeader>
                         <Text color='black'>{trans.value}</Text>
                       </div>
-                  </TransactionContainer>
-                ))
-              }
-            </div>
+                  </BlockContainer>
+                ))}
+              </div>
             </>
           ))}
           
